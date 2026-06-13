@@ -79,31 +79,15 @@ public:
         }
     }
 
-    // search theo vị trí
-    // Tìm kiếm giá trị người dùng nhập vào
-    Node *search_index(int value)
-    {
-        Node *p = first;
-        while (p != nullptr)
-        {
-            if (p->info == value)
-            {
-                return p;
-            }
-            p = p->next;
-        }
-        return nullptr;
-    }
-
-    // Tìm kiếm vị trí thêm giá trị
-    Node *search_location(int index)
+    // Tìm kiếm vị trí thêm để giá trị
+    Node *search_location(int value)
     {
         int A = 0;
         Node *p = first;
         while (p != nullptr)
         {
             A++;
-            if (A == index)
+            if (A == value)
             {
                 return p;
             }
@@ -130,11 +114,28 @@ public:
     // =============
     void AddElement()
     {
+        if (first == nullptr)
+        {
+            cout << "Chưa có danh sách !!";
+            return;
+        }
+
         int n_phan_tu = Dem();
         // Số lượng thêm
         int Soluong = -1;
-        cout << "\n- Số phần tử muốn thêm vào danh sách : ";
-        cin >> Soluong;
+        while (Soluong <= 0)
+        {
+            cout << "\n- Số phần tử muốn thêm vào danh sách : ";
+            cin >> Soluong;
+            if (Soluong == 0)
+            {
+                return;
+            }
+            else if (Soluong < 0)
+            {
+                cout << "(" << Soluong << ")" << " không hợp lệ !!";
+            }
+        }
 
         // vị trí thêm
         int vitri = -1;
@@ -196,21 +197,38 @@ public:
             // phí sau phần tử đầu
             else
             {
-                // Gắn đuôi
-                Node *p = first->next;
-                p->previous = last_AddElement;
-                last_AddElement->next = p;
+                if (n_phan_tu == 1)
+                {
+                    first->next = first_AddElement;
+                    first_AddElement->previous = first;
+                    last = last_AddElement;
+                }
+                else
+                {
+                    // Gắn đuôi
+                    Node *p = first->next;
+                    p->previous = last_AddElement;
+                    last_AddElement->next = p;
 
-                // Gắn đầu
-                first->next = first_AddElement;
-                first_AddElement->previous = first;
+                    // Gắn đầu
+                    first->next = first_AddElement;
+                    first_AddElement->previous = first;
+                }
             }
         }
         // Thêm sau first
         if (vitri > 1 && vitri <= n_phan_tu)
         {
+            /*
+                [1]-[2]-[3]-[4]-[5]
+                - Nếu before_after == 1 và chèn ở vị trí số 3 , tức là chèn phí trước số 3
+                - Nếu before_after == 2 và ------------------, tức là chèn phí sau số 3
+                - 1 trước , 2 sau
+            */
             Node *p = search_location(vitri);
+            // ===============
             // chèn phía trước
+            // ===============
             if (before_after == 1)
             {
                 // Gắn đầu
@@ -222,17 +240,22 @@ public:
                 last_AddElement->next = p;
                 p->previous = last_AddElement;
             }
+            // =============
             // chèn phía sau
+            //==============
             else
             {
                 if (vitri == n_phan_tu && before_after == 2)
                 {
+                    // Chèn vào sau phần tử cuối
                     // Gắn đầu
                     p->next = first_AddElement;
                     first_AddElement->previous = p;
+                    last = last_AddElement;
                 }
                 else
                 {
+                    // Chèn ở giữa
                     // Gắn đuôi
                     Node *p_after = p->next;
                     last_AddElement->next = p_after;
@@ -253,7 +276,9 @@ public:
             cout << "Không có ds để xoá\n";
             return;
         }
+        // ===============
         // xoá theo vị trí
+        // ===============
         int n_phan_tu = Dem();
 
         int select = -1;
@@ -279,6 +304,16 @@ public:
             // Xoá Đầu
             if (element == 1)
             {
+                // Xoá khi trong ds có 1 pt
+                if (first == last)
+                {
+                    delete first;
+                    first = last = nullptr;
+                    cout << "đã xoá\n";
+                    return;
+                }
+
+                // Xoá đầu khi trong ds có nhiều pt
                 Node *p_element = first->next;
                 p_element->previous = nullptr;
                 delete first;
@@ -289,6 +324,7 @@ public:
             {
                 Node *truoc = p->previous;
                 truoc->next = nullptr;
+                last = truoc; // Gáng lại con trỏ truoc cho last
                 delete p;
             }
             // Xoá giữa
@@ -301,12 +337,40 @@ public:
                 delete p;
             }
         }
+        // ================
         // xoá theo giá trị
+        // ================
         else
         {
             int number = -1;
             cout << "Giá trị muốn xoá : ";
             cin >> number;
+
+            // Xoá khi trong ds có 1 pt
+            if (first == last && first->info == number)
+            {
+                delete first;
+                first = last = nullptr;
+                cout << "đã xoá\n";
+                return;
+            }
+            // Check phần tử có trong ds không
+            Node *check = first;
+            while (check != nullptr)
+            {
+                if (check->info == number)
+                {
+                    break;
+                }
+
+                check = check->next;
+            }
+
+            if (check == nullptr)
+            {
+                cout << "Ds không có " << number << endl;
+                return;
+            }
 
             // Xoá đầu
             if (first->info == number)
@@ -314,7 +378,10 @@ public:
                 while (first->info == number)
                 {
                     Node *p = first->next;
-                    p->previous = nullptr;
+                    if (p != nullptr)
+                    {
+                        p->previous = nullptr;
+                    }
                     delete first;
                     first = p;
                 }
@@ -331,6 +398,7 @@ public:
                     {
                         Node *p = p_dl->previous;
                         p->next = nullptr;
+                        last = p; // Gáng lại con trỏ last cho p
                         delete p_dl;
                         return;
                     }
@@ -348,27 +416,45 @@ public:
         }
     }
 
-    void clear()
+    // search theo vị trí
+    // Tìm kiếm giá trị người dùng nhập vào
+    void search_index()
     {
+        if (first == nullptr)
+        {
+            cout << "Danh sách rỗng!!\n";
+            return;
+        }
+        int number = -1;
+        cout << "Phần tử muốn tìm : ";
+        cin >> number;
         Node *p = first;
-        Node *last = first;
+
+        int dem = 0;
         while (p != nullptr)
         {
+            if (p->info == number)
+            {
+                uintptr_t diaChi = reinterpret_cast<uintptr_t>(p);
+                cout << "[" << dem++ << "] " << diaChi << p << endl;
+            }
             p = p->next;
-            delete last;
-            last = p;
+        }
+        if (dem == 0)
+        {
+            cout << "Ds không có " << number << endl;
         }
     }
 
     ~Doubly_linked_list()
     {
         Node *p = first;
-        Node *last = first;
+        Node *temp = first;
         while (p != nullptr)
         {
             p = p->next;
-            delete last;
-            last = p;
+            delete temp;
+            temp = p;
         }
     }
 };
@@ -385,7 +471,8 @@ void menu()
         cout << "[2] In danh sách \n";
         cout << "[3] Thêm phần tử vào ds\n";
         cout << "[4] Xoá phần tử khỏi ds\n";
-        cout << "[0] Thoát";
+        cout << "[5] Tìm kiếm vị trí Pt trong RAM\n";
+        cout << "[0] Thoát\n";
         cout << "chọn : ";
         cin >> choice;
         switch (choice)
@@ -401,9 +488,11 @@ void menu()
             break;
         case 4:
             ds.DeleteElement();
+        case 5:
+            ds.search_index();
+            break;
         }
     } while (choice != 0);
-    ds.clear();
 }
 
 int main()
